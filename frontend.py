@@ -1,8 +1,12 @@
 import tkinter as tk
 from tkinter import ttk
-from sorting_algorithms import merge_sort
+
+from product_logic import get_products, sort_products, search_products
+
 
 products_data = []
+
+
 # ---------------- MAIN WINDOW ----------------
 
 root = tk.Tk()
@@ -12,6 +16,8 @@ root.geometry("1100x700")
 root.minsize(900, 600)
 
 root.configure(bg="#f4f6f8")
+
+
 # ---------------- HEADER ----------------
 
 header = tk.Frame(root, bg="#1f2937", height=100)
@@ -34,57 +40,53 @@ subtitle = tk.Label(
     fg="#d1d5db"
 )
 subtitle.pack()
+
+
 # ---------------- SEARCH SECTION ----------------
 
-search_frame = tk.Frame(
-    root,
-    bg="#f4f6f8"
-)
-
-search_frame.pack(
-    fill="x",
-    padx=30,
-    pady=(20, 5)
-)
+search_frame = tk.Frame(root, bg="#f4f6f8")
+search_frame.pack(fill="x", padx=30, pady=(20, 5))
 
 
 def search_product():
-    search_text = search_entry.get().lower()
+    search_text = search_entry.get()
 
-    # Clear the table
+    results = search_products(search_text)
+
     for item in product_table.get_children():
         product_table.delete(item)
 
-    # Show matching products
-    for product in products_data:
-        if search_text in product[0].lower() or search_text in product[1].lower():
-            product_table.insert(
-                "",
-                "end",
-                values=product
+    for product in results:
+        product_table.insert(
+            "",
+            "end",
+            values=(
+                product["name"],
+                product["category"],
+                product["price"],
+                product["rating"],
+                str(product["discount"]) + "%"
             )
+        )
 
 
-tk.Label(
+search_label = tk.Label(
     search_frame,
     text="🔎 Search Product",
-    font=("Segoe UI", 11, "bold"),
-    bg="#f4f6f8",
-    fg="#1f2937"
-).pack(
-    side="left",
-    padx=(0, 10)
+    font=("Segoe UI", 10, "bold"),
+    bg="#f4f6f8"
 )
+
+search_label.pack(side="left", padx=(0, 10))
+
 
 search_entry = ttk.Entry(
     search_frame,
-    width=40
+    width=35
 )
 
-search_entry.pack(
-    side="left",
-    padx=5
-)
+search_entry.pack(side="left", padx=5)
+
 
 search_button = ttk.Button(
     search_frame,
@@ -92,10 +94,9 @@ search_button = ttk.Button(
     command=search_product
 )
 
-search_button.pack(
-    side="left",
-    padx=10
-)
+search_button.pack(side="left", padx=5)
+
+
 # ---------------- PRODUCT INPUT SECTION ----------------
 
 input_frame = tk.LabelFrame(
@@ -113,7 +114,9 @@ input_frame.pack(
     padx=30,
     pady=20
 )
-# Product Name
+
+
+# ---------------- PRODUCT NAME ----------------
 
 tk.Label(
     input_frame,
@@ -139,7 +142,9 @@ product_name_entry.grid(
     padx=10,
     pady=5
 )
-# Category
+
+
+# ---------------- CATEGORY ----------------
 
 tk.Label(
     input_frame,
@@ -153,6 +158,7 @@ tk.Label(
     pady=8,
     sticky="w"
 )
+
 category_combo = ttk.Combobox(
     input_frame,
     values=[
@@ -176,7 +182,9 @@ category_combo.grid(
 )
 
 category_combo.set("Electronics")
-# Price
+
+
+# ---------------- PRICE ----------------
 
 tk.Label(
     input_frame,
@@ -202,7 +210,9 @@ price_entry.grid(
     padx=10,
     pady=5
 )
-# Rating
+
+
+# ---------------- RATING ----------------
 
 tk.Label(
     input_frame,
@@ -228,7 +238,9 @@ rating_entry.grid(
     padx=10,
     pady=5
 )
-# Discount
+
+
+# ---------------- DISCOUNT ----------------
 
 tk.Label(
     input_frame,
@@ -254,49 +266,8 @@ discount_entry.grid(
     padx=10,
     pady=5
 )
-# Add Product Button
-def add_product():
-    name = product_name_entry.get()
-    category = category_combo.get()
-    price = price_entry.get()
-    rating = rating_entry.get()
-    discount = discount_entry.get()
-
-    if name and price and rating and discount:
-        products_data.append(
-    (name, category, price, rating, discount)
-)
-        product_table.insert(
-            "",
-            "end",
-            values=(name, category, price, rating, discount)
-        )
-
-        product_name_entry.delete(0, "end")
-        price_entry.delete(0, "end")
-        rating_entry.delete(0, "end")
-        discount_entry.delete(0, "end")
 
 
-add_button = ttk.Button(
-    input_frame,
-    text="+  Add Product",
-    command=add_product
-)
-
-add_button.grid(
-    row=1,
-    column=5,
-    padx=15,
-    pady=5
-)
-
-add_button.grid(
-    row=1,
-    column=5,
-    padx=15,
-    pady=5
-)
 # ---------------- PRODUCT TABLE ----------------
 
 table_frame = tk.LabelFrame(
@@ -316,7 +287,14 @@ table_frame.pack(
     pady=(0, 15)
 )
 
-columns = ("name", "category", "price", "rating", "discount")
+
+columns = (
+    "name",
+    "category",
+    "price",
+    "rating",
+    "discount"
+)
 
 product_table = ttk.Treeview(
     table_frame,
@@ -325,74 +303,123 @@ product_table = ttk.Treeview(
     height=8
 )
 
-product_table.heading("name", text="Product")
-product_table.heading("category", text="Category")
-product_table.heading("price", text="Price (₹)")
-product_table.heading("rating", text="Rating")
-product_table.heading("discount", text="Discount")
+product_table.heading(
+    "name",
+    text="Product"
+)
 
-product_table.column("name", width=250)
-product_table.column("category", width=150)
-product_table.column("price", width=120)
-product_table.column("rating", width=100)
-product_table.column("discount", width=120)
+product_table.heading(
+    "category",
+    text="Category"
+)
+
+product_table.heading(
+    "price",
+    text="Price (₹)"
+)
+
+product_table.heading(
+    "rating",
+    text="Rating"
+)
+
+product_table.heading(
+    "discount",
+    text="Discount"
+)
+
+product_table.column(
+    "name",
+    width=250
+)
+
+product_table.column(
+    "category",
+    width=150
+)
+
+product_table.column(
+    "price",
+    width=120
+)
+
+product_table.column(
+    "rating",
+    width=100
+)
+
+product_table.column(
+    "discount",
+    width=120
+)
 
 product_table.pack(
     fill="both",
     expand=True
 )
-# ---------------- SAMPLE PRODUCTS ----------------
 
-sample_products = [
-    ("Nike Air Shoes", "Footwear", "2999", "4.5", "20%"),
-    ("Puma Running Shoes", "Footwear", "1999", "4.6", "30%"),
-    ("Boat Headphones", "Electronics", "1499", "4.3", "15%"),
-    ("HP Wireless Mouse", "Electronics", "799", "4.1", "10%"),
-    ("Lakme Face Cream", "Beauty", "599", "4.2", "25%"),
-    ("LEGO Classic Set", "Toys", "1299", "4.8", "15%"),
-]
-products_data.extend(sample_products)
 
-for product in sample_products:
-    product_table.insert("", "end", values=product)
-def sort_products():
-    products = []
+# ---------------- BEST DEAL FUNCTION ----------------
 
-    for item in product_table.get_children():
-        values = product_table.item(item)["values"]
+def update_best_deal():
 
-        products.append({
-            "name": values[0],
-            "category": values[1],
-            "price": float(values[2]),
-            "rating": float(values[3]),
-            "discount": float(values[4].replace("%", ""))
-        })
+    if not products_data:
+        best_deal_label.config(
+            text="🏆 Best Deal: No products available"
+        )
+        return
 
-    sort_by = sort_combo.get()
-    order = order_combo.get()
+    # Calculate a simple deal score
+    best_product = products_data[0]
 
-    if sort_by == "Price":
-        key = "price"
-    elif sort_by == "Rating":
-        key = "rating"
-    elif sort_by == "Discount":
-        key = "discount"
-    else:
-        key = "name"
-
-    reverse = order == "High → Low"
-
-    sorted_products = merge_sort(
-        products,
-        key,
-        reverse
+    best_score = (
+        best_product["discount"] * 0.5
+        + best_product["rating"] * 10
     )
 
-    for item in product_table.get_children():
-        product_table.delete(item)
+    for product in products_data[1:]:
 
-    for product in sorted_products:
+        score = (
+            product["discount"] * 0.5
+            + product["rating"] * 10
+        )
+
+        if score > best_score:
+            best_score = score
+            best_product = product
+
+    best_deal_label.config(
+        text=(
+            f"🏆 Best Deal: {best_product['name']}  |  "
+            f"₹{best_product['price']}  |  "
+            f"⭐ {best_product['rating']}  |  "
+            f"{best_product['discount']}% OFF"
+        )
+    )
+
+
+# ---------------- ADD PRODUCT ----------------
+
+def add_product():
+
+    name = product_name_entry.get()
+    category = category_combo.get()
+    price = price_entry.get()
+    rating = rating_entry.get()
+    discount = discount_entry.get()
+
+    if name and category and price and rating and discount:
+
+        product = {
+            "name": name,
+            "category": category,
+            "price": int(price),
+            "rating": float(rating),
+            "discount": float(discount.replace("%", ""))
+        }
+
+        products_data.append(product)
+
         product_table.insert(
             "",
             "end",
@@ -404,7 +431,99 @@ def sort_products():
                 str(product["discount"]) + "%"
             )
         )
-    # ---------------- SORTING CONTROLS ----------------
+
+        update_best_deal()
+
+        product_name_entry.delete(
+            0,
+            "end"
+        )
+
+        price_entry.delete(
+            0,
+            "end"
+        )
+
+        rating_entry.delete(
+            0,
+            "end"
+        )
+
+        discount_entry.delete(
+            0,
+            "end"
+        )
+
+
+add_button = ttk.Button(
+    input_frame,
+    text="+  Add Product",
+    command=add_product
+)
+
+add_button.grid(
+    row=1,
+    column=5,
+    padx=15,
+    pady=5
+)
+
+
+# ---------------- LOAD PRODUCTS ----------------
+
+backend_products = get_products()
+
+for product in backend_products:
+
+    products_data.append(product)
+
+    product_table.insert(
+        "",
+        "end",
+        values=(
+            product["name"],
+            product["category"],
+            product["price"],
+            product["rating"],
+            str(product["discount"]) + "%"
+        )
+    )
+
+
+# ---------------- SORTING FUNCTION ----------------
+
+def sort_products_gui():
+
+    sort_by = sort_combo.get()
+    order = order_combo.get()
+
+    reverse = order == "High → Low"
+
+    sorted_products = sort_products(
+        sort_by,
+        reverse,
+        products_data
+    )
+
+    for item in product_table.get_children():
+        product_table.delete(item)
+
+    for product in sorted_products:
+
+        product_table.insert(
+            "",
+            "end",
+            values=(
+                product["name"],
+                product["category"],
+                product["price"],
+                product["rating"],
+                str(product["discount"]) + "%"
+            )
+        )
+
+
+# ---------------- SORTING CONTROLS ----------------
 
 control_frame = tk.Frame(
     root,
@@ -417,6 +536,7 @@ control_frame.pack(
     pady=10
 )
 
+
 tk.Label(
     control_frame,
     text="Sort By:",
@@ -426,6 +546,7 @@ tk.Label(
     side="left",
     padx=(0, 8)
 )
+
 
 sort_combo = ttk.Combobox(
     control_frame,
@@ -457,6 +578,7 @@ tk.Label(
     padx=(25, 8)
 )
 
+
 order_combo = ttk.Combobox(
     control_frame,
     values=[
@@ -473,16 +595,19 @@ order_combo.pack(
 
 order_combo.set("Low → High")
 
+
 sort_button = ttk.Button(
     control_frame,
     text="SORT PRODUCTS",
-    command=sort_products
+    command=sort_products_gui
 )
 
 sort_button.pack(
     side="right",
     padx=5
 )
+
+
 # ---------------- BEST DEAL SECTION ----------------
 
 best_deal_frame = tk.Frame(
@@ -498,9 +623,10 @@ best_deal_frame.pack(
     pady=(0, 20)
 )
 
+
 best_deal_label = tk.Label(
     best_deal_frame,
-    text="🏆 Best Deal: Select products to calculate the best deal",
+    text="🏆 Best Deal: Calculating...",
     font=("Segoe UI", 11, "bold"),
     bg="#e8f5e9",
     fg="#166534"
@@ -509,4 +635,12 @@ best_deal_label = tk.Label(
 best_deal_label.pack(
     side="left"
 )
+
+
+# Update Best Deal after the label has been created
+update_best_deal()
+
+
+# ---------------- RUN APPLICATION ----------------
+
 root.mainloop()
